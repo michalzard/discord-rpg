@@ -1,0 +1,26 @@
+{
+  "name": "discord_rpg",
+  "version": "1.0.0",
+  "description": "Discord Bot RPG game",
+  "main": "index.js",
+  "scripts": {
+    "bot-dev" : "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michalzard/discord-rpg.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michalzard/discord-rpg/issues"
+  },
+  "homepage": "https://github.com/michalzard/discord-rpg#readme",
+  "dependencies": {
+    "discord.js": "^13.7.0",
+    "dotenv": "^16.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  }
+}
