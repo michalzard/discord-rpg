@@ -1,4 +1,9 @@
-const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
+const {
+  MessageEmbed,
+  MessageActionRow,
+  MessageButton,
+  Message,
+} = require("discord.js");
 const User = require("../schemas/user");
 const { AdventureManager } = require("../utils/AdventureManager");
 
@@ -22,6 +27,7 @@ module.exports.adventure = {
         .setLabel("Leave")
         .setStyle("DANGER")
     );
+
     const filter = (buttonInt) => {
       return message.author.id === buttonInt.user.id;
     };
@@ -33,13 +39,12 @@ module.exports.adventure = {
     collector.on("end", async (collection) => {
       switch (collection.first().customId) {
         case "enter":
-          message.reply("Here goes embed that displays what mob will you fight,action buttons for attacking,using items")
+          adventureMonsterInteractionPrompt(message);
           break;
         case "leave":
-        
           message.reply("You fled from the area").then((msg) => {
             setTimeout(() => {
-                msg.delete();
+              msg.delete();
             }, 3000);
           });
           break;
@@ -62,3 +67,80 @@ module.exports.adventure = {
  *
  *
  */
+
+//TODO : Add to adventure manager
+function adventureMonsterInteractionPrompt(message) {
+  const skeleton = {
+    hp: 15,
+    hpMax: 15,
+    drops: {
+      coins: Math.floor(Math.random() * 100) + 15,
+    },
+  };
+  const monsterEmbed = new MessageEmbed({
+    title: "Skeleton appeared!",
+    description: "Sppoky Scary skeleton",
+    fields: [
+      {
+        name: "Health",
+        value: `${skeleton.hp}/${skeleton.hpMax}`,
+        inline: true,
+      },
+      {
+        name: "Drops",
+        value: skeleton.drops.coins.toString(),
+        inline: true,
+      },
+    ],
+  });
+  //player interactions
+  const playerIntRow = new MessageActionRow().addComponents(
+    new MessageButton()
+      .setCustomId("attack")
+      .setLabel("Attack")
+      .setStyle("DANGER"),
+    new MessageButton()
+      .setCustomId("skill")
+      .setLabel("Skill")
+      .setStyle("DANGER"),
+    new MessageButton()
+      .setCustomId("use_item")
+      .setLabel("Use Item")
+      .setStyle("SECONDARY")
+  );
+  const filter = (buttonInt) => {
+    return message.author.id === buttonInt.user.id;
+  };
+  const playerIntCollector = message.channel.createMessageComponentCollector({
+    filter,
+    max: 1000,
+    time: 1000 * 60,
+  });
+
+  playerIntCollector.on("collect", async button => {
+    console.log(button);
+    button.deferUpdate();
+  })
+
+  message
+    .reply({ embeds: [monsterEmbed], components: [playerIntRow] })
+    .then((_message) => {
+      playerIntCollector.on("end", (collection) => {
+        switch (collection.first().customId) {
+          case "attack":
+            skeleton.hp -= 5;
+            monsterEmbed.fields[0].value = `${skeleton.hp}/${skeleton.hpMax}`;
+            playerIntCollector.resetTimer();
+            _message.edit({ embeds: [monsterEmbed] ,components:[playerIntRow]});
+            
+            break;
+          case "skill":
+            console.log("skill");
+            break;
+          case "use_item":
+            console.log("use_item");
+            break;
+        }
+      });
+    });
+}
