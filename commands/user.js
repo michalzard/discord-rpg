@@ -1,11 +1,11 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const User = require("../schemas/user");
-const { LevelManager } = require("../utils/LevelManager");
+const { LevelManager } = require("../utils/managers/LevelManager");
 
 module.exports.user = {
   cmdName: "User",
   description: "User creation & info",
-  create: async ( message) => {
+  create: async (message) => {
     //prompt user with reply with embed
     //after user selection save entry to database
     const { id, username, discriminator } = message.author;
