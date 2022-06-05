@@ -1,5 +1,6 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const User = require("../schemas/user");
+const { Entity, Player } = require("../utils/managers/EntityManger");
 const { LevelManager } = require("../utils/managers/LevelManager");
 
 module.exports.user = {
@@ -52,9 +53,8 @@ module.exports.user = {
       collector.on("end", async (collection) => {
         const dName = `${username}#${discriminator}`;
         const userClass = new User({
-          id,
+          id:id.toString(),
           displayName: dName,
-          class: "Warrior",
           nextLevelXP: LevelManager.maxXPByLevel(1), //Starting level 1
         });
 

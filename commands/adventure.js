@@ -1,11 +1,21 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
+const User = require("../schemas/user");
 const { AdventureManager } = require("../utils/managers/AdventureManager");
 const sameUserFilter = (buttonInt) => {
   return message.author.id === buttonInt.user.id;
 };
 
 module.exports.adventure = {
-  start: (message) => {
+  start: async (message) => {
+
+    console.log(message);
+    const fUser = await User.find({id:message.author.id.toString()});
+    const user = fUser[0];
+
+    if(user){
+
+    
+
     const collector = message.channel.createMessageComponentCollector({
       sameUserFilter,
       max: 1,
@@ -37,7 +47,12 @@ module.exports.adventure = {
           msg.delete();
         });
       });
-  },
+  
+    }else{
+      message.reply("Cannot find character");
+    }
+  }
+
 };
 
 /**
