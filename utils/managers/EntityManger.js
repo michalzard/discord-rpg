@@ -37,7 +37,6 @@ class PlayerEntity extends Entity {
     if(!user) return;
       if (currentXp >= user.nextLevelXP) {
         const remainder = currentXp - user.nextLevelXP;
-        console.log(remainder);
         user.xp = 0;
         user.level++;
         user.nextLevelXP = LevelManager.maxXPByLevel(user.level);

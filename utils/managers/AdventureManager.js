@@ -139,10 +139,13 @@ module.exports.AdventureManager = class AdventureManager {
           Player.levelUp(user.xp,user.id);
           user.save();
           const missingXP = LevelManager.getMissingXP(user.xp,user.nextLevelXP);
-          
+          const newLevelEmbed = new MessageEmbed({
+            title:`${user.displayName} leveled up`,
+            description:`Congratulations,you leveled up to ${user.level+1}`,
+          })
           i.last().message.edit({
-          content:`You have slain **${randomEnemy.name}**\nYou received **${randomEnemy.coins} coins**\nYou received **${randomEnemy.xp} experience**\n${missingXP > 0 ? `**${missingXP.toString()} experience** remaining to next level (${user.xp}/${user.nextLevelXP}) ` : ''} `,
-          embeds: [],
+          content:`**${randomEnemy.name} has been slain :skull:**\n**You received ${randomEnemy.coins} :coin: **\n**You received ${randomEnemy.xp} :hourglass:**\n${missingXP > 0 ? `**${missingXP.toString()} :hourglass: remaining to next level**` : ''} `,
+          embeds: missingXP <= 0 ? [newLevelEmbed] : [],
           components:[]});
           }else{
             i.last().message.edit({content:`[Debug] there was error saving user data`});
