@@ -136,12 +136,12 @@ module.exports.AdventureManager = class AdventureManager {
           if(user){
           user.coins += randomEnemy.coins;
           user.xp += randomEnemy.xp;
+          Player.levelUp(user.xp,user.id);
           user.save();
           const missingXP = LevelManager.getMissingXP(user.xp,user.nextLevelXP);
-          Player.levelUp(user.xp,user.id);
           
           i.last().message.edit({
-          content:`You have slain **${randomEnemy.name}**\nYou received **${randomEnemy.coins} coins**\nYou received **${randomEnemy.xp} experience**\n${missingXP > 0 ? `**${missingXP.toString()} experience** remaining to next level (${user.xp}/${user.nextLevelXP}) ` : `**Congratulations! You leveld up.**`} `,
+          content:`You have slain **${randomEnemy.name}**\nYou received **${randomEnemy.coins} coins**\nYou received **${randomEnemy.xp} experience**\n${missingXP > 0 ? `**${missingXP.toString()} experience** remaining to next level (${user.xp}/${user.nextLevelXP}) ` : ''} `,
           embeds: [],
           components:[]});
           }else{
