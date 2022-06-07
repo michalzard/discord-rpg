@@ -1,13 +1,13 @@
 const { MessageActionRow, MessageButton, MessageEmbed } = require("discord.js");
 const User = require("../../schemas/user");
-const { Entity, Player } = require("./EntityManger");
+const { Entity, Player } = require("./EntityManager");
 const { LevelManager } = require("./LevelManager");
 
 module.exports.AdventureManager = class AdventureManager {
   //todo: load entities for areas from db
   static areas = [
     {
-      name: "Abadoned Forest",
+      name: "Abandoned Forest",
       minReqLevel: 0,
       monsters: [Entity.Types.Skeleton],
     },
@@ -67,7 +67,6 @@ module.exports.AdventureManager = class AdventureManager {
         randomEnemy.hp = randomEnemy.hpMax;//make sure hp is reset
       }
     }
-
     /**
      * 4. display enemy health + dynamically update said health
      * 5. create actionRow with button for attack,way to go into inventory
@@ -111,8 +110,9 @@ module.exports.AdventureManager = class AdventureManager {
         case "fight":
           if (randomEnemy.hp <= 5) {randomEnemy.hp -= 5;fightCollector.stop(`Entity[${randomEnemy.name}] died`); break;}
           randomEnemy.hp -= 5;
+          randomEnemy.attack(i);
           //manually update health
-          fightEmbed.fields[0].value = `${randomEnemy.hp}/${randomEnemy.hpMax}`
+          fightEmbed.fields[0].value = `${randomEnemy.hp}/${randomEnemy.hpMax}`;
           i.message.edit({
               embeds: [fightEmbed],
               components: [fightActions],
@@ -136,22 +136,18 @@ module.exports.AdventureManager = class AdventureManager {
           if(user){
           user.coins += randomEnemy.coins;
           user.xp += randomEnemy.xp;
-          Player.levelUp(user.xp,user.id);
+          Player.levelUp(message,user.xp,user.id);
           user.save();
           const missingXP = LevelManager.getMissingXP(user.xp,user.nextLevelXP);
-          const newLevelEmbed = new MessageEmbed({
-            title:`${user.displayName} leveled up`,
-            description:`Congratulations,you leveled up to ${user.level+1}`,
-          })
+      
           i.last().message.edit({
           content:`**${randomEnemy.name} has been slain :skull:**\n**You received ${randomEnemy.coins} :coin: **\n**You received ${randomEnemy.xp} :hourglass:**\n${missingXP > 0 ? `**${missingXP.toString()} :hourglass: remaining to next level**` : ''} `,
-          embeds: missingXP <= 0 ? [newLevelEmbed] : [],
+          embeds: [],
           components:[]});
           }else{
             i.last().message.edit({content:`[Debug] there was error saving user data`});
           }
       }
-        
       });
     });
   }
@@ -192,6 +188,7 @@ module.exports.AdventureManager = class AdventureManager {
       switch (interaction.customId) {
         case "enter":
           // show Fight
+          interaction.message.delete();//deletes previous embed(area prompt)
           this.getFightMenu(message, areaName);
           break;
         case "cancel":
