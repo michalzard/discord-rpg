@@ -3,7 +3,7 @@ const userSchema = new mongoose.Schema(
   {
     id: {
       type: String,
-      required:true,
+      required: true,
     },
     displayName: {
       type: String,
@@ -31,13 +31,26 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 200, // Will be calculated by level manager
     },
-    coins:{
-      type:Number,
-      default:0,
+    currency: {
+      coins: {
+        type: Number,
+        default: 0,
+      },
+    },
+    revival:{
+      remaining:{
+        type:Number,
+        default:3,
+      },
+      nextAvailable:{
+        type:Date,
+        default:null,
+      }
     },
     stats: {
-      hp:{type:Number,default:10},
-      maxHp:{type:Number,default:10},
+      //will be calculated by entitymanager
+      hp: { type: Number, default: 10 },
+      maxHp: { type: Number, default: 10 },
       stamina: { type: Number, default: 1 },
       strength: { type: Number, default: 1 },
       magic: { type: Number, default: 1 },
