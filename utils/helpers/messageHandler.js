@@ -1,5 +1,4 @@
-const { adventure } = require("../../commands/adventure");
-const { user } = require("../../commands/user");
+const { commands } = require("../../commands/index");
 module.exports.MessageHandler = class MessageHandler {
   static prefix = "!";
   static handle(message) {
@@ -9,22 +8,15 @@ module.exports.MessageHandler = class MessageHandler {
         .trim()
         .substring(this.prefix.length)
         .split(/\s+/);
-      const mainArg = args[0];
-      this.runCommand(message, mainArg);
+
+      this.runCommand(message, args);
     }
   }
-  static runCommand(message, arg) {
-    if (!arg) return;
-    switch (arg) {
-      case "user.create":
-        user.create(message);
-        break;
-      case "user.info":
-        user.info(message);
-        break;
-      case "adventure":
-        adventure.start(message);
-        break;
-    }
+  static runCommand(message, args) {
+    if (!args[0]) return;
+    //if first command exits, example "!user , !adventure" and so on
+    // use their specific run function
+    if(commands[`${args[0].toLowerCase()}`]) commands[`${args[0].toLowerCase()}`].run(message, args);
+    else message.reply("This command doesn't exist,to learn more use `!help`");
   }
 };
