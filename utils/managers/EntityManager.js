@@ -21,7 +21,9 @@ class Entity {
     if (user) {
       user.stats.hp -= 5;
       user.save();
-      message.edit(`**CombatLog**:${user.displayName} recieved 5 damage,currentHp:${user.stats.hp}`);
+      message.edit(
+        `**CombatLog**:${user.displayName} recieved 5 damage,currentHp:${user.stats.hp}`
+      );
     } else {
       message.reply(`Unable to attack player`);
     }
@@ -163,6 +165,22 @@ class PlayerEntity extends Entity {
         .catch((err) => console.error(err));
     }
   }
+  static async remove(message) {
+    const { id } = message.author;
+    if (id) {
+      await User.deleteOne({ id }).then((data) => {
+        console.log(data);
+        if (data.deletedCount > 0)
+          message.reply(
+            "Your character was deleted.\nTo create new one you can use `!user create`"
+          );
+        else
+          message.reply(
+            "Unable to find your character.\nYou can start new one with `!user create`"
+          );
+      });
+    } else return;
+  }
   /**
    * !user info command
    * @param {*} message object that holds data about author,which is used to query character info
@@ -215,6 +233,22 @@ class PlayerEntity extends Entity {
       } else {
         return true;
       }
+    }
+  }
+  static async revive(message) {
+    const {id} = message.author;
+    const user = await this.getById(id);
+    if (user && user.revival.remaining > 0) {
+      if (user.stats.hp <= 0) {
+        user.stats.hp = user.stats.maxHp;
+        user.revival.remaining--;
+        user.save();
+        message.reply(`${user.displayName} was revived. ${user.revival.remaining} revives left`);
+      }else{
+        message.reply(`${user.displayName} is healthy.`);
+      }
+    }else{
+      message.reply(`Next available ${user.revival.nextAvailable}`)
     }
   }
 }
