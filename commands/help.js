@@ -1,4 +1,4 @@
-module.exports.help = {
+module.exports = {
   cmdName: "Help",
   description: "Shows all available commands",
   run: function(message){
