@@ -6,7 +6,7 @@ const sameUserFilter = (buttonInt) => {
 };
 
 module.exports = {
-  start: async (message) => {
+  run: async (message) => {
 
    const fUser = await User.find({id:message.author.id.toString()});
     const user = fUser[0];
