@@ -49,8 +49,8 @@ const userSchema = new mongoose.Schema(
     },
     stats: {
       //will be calculated by entitymanager
-      hp: { type: Number, default: 10 },
-      maxHp: { type: Number, default: 10 },
+      hp: { type: Number, default: 100 },
+      maxHp: { type: Number, default: 100 },
       stamina: { type: Number, default: 1 },
       strength: { type: Number, default: 1 },
       magic: { type: Number, default: 1 },
