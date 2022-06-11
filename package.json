@@ -4,7 +4,8 @@
   "description": "Discord Bot RPG game",
   "main": "index.js",
   "scripts": {
-    "bot-dev": "nodemon index.js"
+    "bot-dev": "nodemon index.js",
+    "create-command":"node ./utils/scripts/newCommandScript.js"
   },
   "repository": {
     "type": "git",
