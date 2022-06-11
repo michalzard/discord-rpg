@@ -7,7 +7,6 @@ filesInCommandsFolder.forEach((file) => {
   if(Object.keys(cmdObject).length > 0) commands[file.split(".")[0]] = require(`../commands/${file}`);
 });
 
-console.log(commands);
 
 module.exports = {
   commands,
