@@ -1,3 +1,4 @@
+const { MessageEmbed } = require("discord.js");
 const { Player } = require("../utils/managers/EntityManager");
 
 module.exports = {
@@ -9,21 +10,29 @@ module.exports = {
     const secondArgument = args[1];
     switch (secondArgument) {
       case "create":
-        this.user.create(message);
+        module.exports.create(message);
         break;
       case "info":
-        this.user.info(message);
+        module.exports.info(message);
         break;
       case "revive":
-        this.user.revive(message);
+        module.exports.revive(message);
         break;
       case "delete":
-        this.user.remove(message);
+        module.exports.remove(message);
         break;
       default:
-        message.reply(
-          "You need to use argument , for example `!user create` or `!user info`"
-        );
+        const embed = new MessageEmbed({
+          title: "Available user commands",
+          description:
+            `
+            \`!user create\` creates character , stays persistent on the account\n
+            \`!user delete\` removes character altogether\n
+            \`!user info\` shows character name,stats,currencies,attributes\n
+            \`!user revive\` revives dead character,revivals are limited to 3x a day \n
+            `,
+        });
+        message.reply({embeds:[embed]});
         break;
     }
   },
@@ -43,7 +52,7 @@ module.exports = {
     Player.info(message);
   },
 
-  revive: async (message) => {
+  revive: (message) => {
     Player.revive(message);
   },
 };
