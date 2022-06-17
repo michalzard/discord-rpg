@@ -2,6 +2,7 @@ const { MessageEmbed } = require("discord.js");
 const { Player } = require("../utils/managers/EntityManager");
 
 module.exports = {
+  description:"Available user commands",
   run: (message, args) => {
     // console.log(args);
     if (!args || !message) return;
