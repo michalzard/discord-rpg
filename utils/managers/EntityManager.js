@@ -4,7 +4,7 @@ const { LevelManager } = require("./LevelManager");
 
 class Entity {
   constructor(name) {
-    this.name = name || "Entity Name ";
+    this.name = name || "Entity Name";
     this.hp = 20;
     this.hpMax = 20;
     this.coins = Math.floor(Math.random() * 50) + 5;
@@ -235,20 +235,62 @@ class PlayerEntity extends Entity {
       }
     }
   }
+  //TODO: CLEAN THIS ONE OUT
   static async revive(message) {
-    const {id} = message.author;
+    const { id } = message.author;
     const user = await this.getById(id);
     if (user && user.revival.remaining > 0) {
       if (user.stats.hp <= 0) {
         user.stats.hp = user.stats.maxHp;
         user.revival.remaining--;
+        if (user.revival.remaning == 0) {
+          const today = new Date();
+          const reviveCD = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate() + 2
+          ); //x days cooldown
+          user.revival.nextAvailable = reviveCD;
+        }
         user.save();
-        message.reply(`${user.displayName} was revived. ${user.revival.remaining} revives left`);
-      }else{
+        message.reply(
+          `${user.displayName} was revived. ${user.revival.remaining} revives left`
+        );
+      } else {
         message.reply(`${user.displayName} is healthy.`);
       }
-    }else{
-      message.reply(`Next available ${user.revival.nextAvailable}`)
+    } else {
+      const dateExpiry = (someDate) => {
+        const today = new Date();
+        return (
+          someDate.getDate() <= today.getDate() &&
+          someDate.getMonth() <= today.getMonth() &&
+          someDate.getFullYear() <= today.getFullYear() 
+        );
+      };
+      const canRefreshCooldown = dateExpiry(user.revival.nextAvailable);
+      console.log(canRefreshCooldown);
+      const today = new Date();
+      const reviveCD = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() + 2 // next day
+      );
+      if (canRefreshCooldown) { // date is today or in past => able to revive
+        user.revival.remaining=2;// max - 1
+        user.revival.nextAvailable = reviveCD;
+        user.stats.hp = user.stats.maxHp;
+        user.save();
+        console.log(user.revival);
+        message.reply(
+          `**Cooldown refreshed**\n${user.displayName} was revived. ${user.revival.remaining} revives left. `
+        );
+      }else {
+        user.revival.nextAvailable=reviveCD;
+        user.revival.remaining=3;
+        user.save();
+        message.reply(`Next available revive ${user.revival.nextAvailable.toUTCString().substring(0,17)}`);
+      }
     }
   }
 }

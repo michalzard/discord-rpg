@@ -6,6 +6,7 @@ const sameUserFilter = (buttonInt) => {
 };
 
 module.exports = {
+  description:"Discover areas and fight enemies",
   run: async (message) => {
 
    const fUser = await User.find({id:message.author.id.toString()});
@@ -18,7 +19,7 @@ module.exports = {
       time: 1000 * 60,
     });
     collector.on("end", async (collection) => {
-      if (collection.first().customId == null) return;
+      if (!collection.first().customId || collection.first().customId == null) return;
       for (let i = 0; i < AdventureManager.areas.length; i++) {
         const mapExists = AdventureManager.getAreaIds()[i].includes(collection.first().customId);
         if (mapExists) {
@@ -31,7 +32,7 @@ module.exports = {
     const isPlayerAlive = user.stats.hp >= 0 
     //once 1 of buttons is clicked,remove
     message.reply({
-        content: isPlayerAlive ? "Debugging with level 5" : `${user.displayName} is dead! Use !revive to resurrect`,
+        content: isPlayerAlive ? "Debugging with level 5" : `${user.displayName} is dead! Use \`!user revive\` to resurrect`,
         embeds: [],
         components: isPlayerAlive ? [AdventureManager.getAreaActionMenu(5)] : [],
       }).then((msg) => {

@@ -16,7 +16,7 @@ module.exports.AdventureManager = class AdventureManager {
   ];
 
   static getAreaIds() {
-    let ids = [];
+    const ids = [];
     for (let i = 0; i < this.areas.length; i++) {
       ids.push(this.areas[i].name.replace(" ", "_"));
     }
@@ -24,7 +24,7 @@ module.exports.AdventureManager = class AdventureManager {
   }
 
   static getUnlockedAreas(level) {
-    let unlockedAreas = [];
+    const unlockedAreas = [];
     for (let i = 0; i < this.areas.length; i++) {
       const area = this.areas[i];
       if (area.minReqLevel <= level) unlockedAreas.push(area);
@@ -55,7 +55,7 @@ module.exports.AdventureManager = class AdventureManager {
 
   //Shows Enemy
   //Shows buttons to interact with enemy
-  static getFightMenu(message, areaName = "Default_Area") {
+  static async getFightMenu(message, areaName = "Default_Area") {
     const filter = (interaction) => {
       return message.author.id === interaction.user.id;
     };
@@ -64,7 +64,7 @@ module.exports.AdventureManager = class AdventureManager {
       const area = this.areas[i];
       if (area.name == areaName) {
         randomEnemy = area.monsters[0];
-        randomEnemy.hp = randomEnemy.hpMax;//make sure hp is reset
+        randomEnemy.hp = randomEnemy.hpMax; //make sure hp is reset
       }
     }
     /**
@@ -102,57 +102,104 @@ module.exports.AdventureManager = class AdventureManager {
       filter,
       time: 1000 * 1000,
     });
-
-    fightCollector.on("collect",(i) => {
+    const user = await Player.getById(message.author.id);//fetches user info once
+    fightCollector.on("collect", (i) => {
       i.deferUpdate();
+
       if (i.customId == null) return;
       switch (i.customId) {
         case "fight":
-          if (randomEnemy.hp <= 5) {randomEnemy.hp -= 5;fightCollector.stop(`Entity[${randomEnemy.name}] died`); break;}
+          if (randomEnemy.hp <= 5) {
+            randomEnemy.hp -= 5;
+            fightCollector.stop("Entity Died");
+            break;
+          }
+          if (user.stats.hp <= 0) {
+            fightCollector.stop("Player Died");
+            break;
+          }
           randomEnemy.hp -= 5;
           randomEnemy.attack(i);
           //manually update health
           fightEmbed.fields[0].value = `${randomEnemy.hp}/${randomEnemy.hpMax}`;
           i.message.edit({
-              embeds: [fightEmbed],
-              components: [fightActions],
-            });
+            embeds: [fightEmbed],
+            components: [fightActions],
+          });
           break;
       }
     });
 
-   message.reply({
-      embeds: [fightEmbed],
-      components: [fightActions],
-    }).then(()=>{
-      //on entity kill
-      fightCollector.on("end", async(i) => {
-       
-        // i is map of all collected interactions
-        if(i.last().message) {
-          //display 
-          const userById = await User.find({id:i.last().user.id.toString()});
+    message
+      .reply({
+        embeds: [fightEmbed],
+        components: [fightActions],
+      })
+      .then(() => {
+        //on entity kill
+        fightCollector.on("end", async (i, reason) => {
+          const userById = await User.find({ id: i.last().user.id.toString() });
           const user = userById[0];
-          if(user){
-          user.coins += randomEnemy.coins;
-          user.xp += randomEnemy.xp;
-          Player.levelUp(message,user.xp,user.id);
-          user.save();
-          const missingXP = LevelManager.getMissingXP(user.xp,user.nextLevelXP);
-      
-          i.last().message.edit({
-          content:`**${randomEnemy.name} has been slain :skull:**\n**You received ${randomEnemy.coins} :coin: **\n**You received ${randomEnemy.xp} :hourglass:**\n${missingXP > 0 ? `**${missingXP.toString()} :hourglass: remaining to next level**` : ''} `,
-          embeds: [],
-          components:[]});
-          }else{
-            i.last().message.edit({content:`[Debug] there was error saving user data`});
+          console.log(reason);
+          // i is map of all collected interactions
+          if (i.last().message) {
+            if (user) {
+              switch (reason) {
+                case "Entity Died":
+                  user.coins += randomEnemy.coins;
+                  user.xp += randomEnemy.xp;
+                  Player.levelUp(message, user.xp, user.id);
+                  user.save();
+                  const missingXP = LevelManager.getMissingXP(
+                    user.xp,
+                    user.nextLevelXP
+                  );
+
+                  i.last().message.edit({
+                    content: `**${
+                      randomEnemy.name
+                    } has been slain :skull:**\n**You received ${
+                      randomEnemy.coins
+                    } :coin: **\n**You received ${
+                      randomEnemy.xp
+                    } :hourglass:**\n${
+                      missingXP > 0
+                        ? `**${missingXP.toString()} :hourglass: remaining to next level**`
+                        : ""
+                    } `,
+                    embeds: [],
+                    components: [],
+                  });
+                  break;
+                case "Player Died":
+                  i.last().message.edit({
+                    content: `${user.displayName} just died.\n Type \`!user revive\` to revive your character.`,
+                    embeds: [],
+                    components: [],
+                  });
+                  break;
+                case "time":
+                  //reason : ran out of time
+                  i.last().message.edit({
+                    content: "Enemy ran away!",
+                    embeds: [],
+                    components: [],
+                  });
+
+                  break;
+              }
+            } else {
+              i.last().message.edit({
+                content: `[Debug] there was error saving user data`,
+                embeds: [],
+                components: [],
+              });
+            }
           }
-      }
+        });
       });
-    });
   }
 
-  
   //
   static async getAreaEnterMenu(message, areaID = "Default_Area") {
     const filter = (interaction) => {
@@ -188,12 +235,15 @@ module.exports.AdventureManager = class AdventureManager {
       switch (interaction.customId) {
         case "enter":
           // show Fight
-          interaction.message.delete();//deletes previous embed(area prompt)
+          interaction.message.delete(); //deletes previous embed(area prompt)
           this.getFightMenu(message, areaName);
           break;
         case "cancel":
           interaction.message.edit({
-            content: `<@${message.author.id}> escaped ${areaID.replace("_"," ")}`,
+            content: `<@${message.author.id}> escaped ${areaID.replace(
+              "_",
+              " "
+            )}`,
             embeds: [],
             components: [],
           });
