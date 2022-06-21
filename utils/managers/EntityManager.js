@@ -8,18 +8,18 @@ class Entity {
     this.hp = 20;
     this.hpMax = 20;
     this.coins = Math.floor(Math.random() * 50) + 5;
-    this.xp = 5;
+    this.xp = Math.floor(Math.random() * 50) + 5;
     this.items = [];
   }
   //deals 5 damage(debugging)
-  async attack(interaction) {
+  async attack(interaction, damage) {
     //interaction.message => message from bot
     //interaction.user -> author
     const message = interaction.message;
     const user = await PlayerEntity.getById(interaction.user.id);
 
     if (user) {
-      user.stats.hp -= 5;
+      user.stats.hp -= damage;
       user.save();
       message.edit(
         `**CombatLog**:${user.displayName} recieved 5 damage,currentHp:${user.stats.hp}`
@@ -242,7 +242,6 @@ class PlayerEntity extends Entity {
     if (user && user.revival.remaining > 0) {
       if (user.stats.hp <= 0) {
         user.stats.hp = user.stats.maxHp;
-        user.revival.remaining--;
         if (user.revival.remaning == 0) {
           const today = new Date();
           const reviveCD = new Date(
@@ -250,6 +249,8 @@ class PlayerEntity extends Entity {
             today.getMonth(),
             today.getDate() + 2
           ); //x days cooldown
+          user.revival.remaining--;
+
           user.revival.nextAvailable = reviveCD;
         }
         user.save();
@@ -265,7 +266,7 @@ class PlayerEntity extends Entity {
         return (
           someDate.getDate() <= today.getDate() &&
           someDate.getMonth() <= today.getMonth() &&
-          someDate.getFullYear() <= today.getFullYear() 
+          someDate.getFullYear() <= today.getFullYear()
         );
       };
       const canRefreshCooldown = dateExpiry(user.revival.nextAvailable);
@@ -276,8 +277,9 @@ class PlayerEntity extends Entity {
         today.getMonth(),
         today.getDate() + 2 // next day
       );
-      if (canRefreshCooldown) { // date is today or in past => able to revive
-        user.revival.remaining=2;// max - 1
+      if (canRefreshCooldown) {
+        // date is today or in past => able to revive
+        user.revival.remaining = 2; // max - 1
         user.revival.nextAvailable = reviveCD;
         user.stats.hp = user.stats.maxHp;
         user.save();
@@ -285,11 +287,15 @@ class PlayerEntity extends Entity {
         message.reply(
           `**Cooldown refreshed**\n${user.displayName} was revived. ${user.revival.remaining} revives left. `
         );
-      }else {
-        user.revival.nextAvailable=reviveCD;
-        user.revival.remaining=3;
+      } else {
+        user.revival.nextAvailable = reviveCD;
+        user.revival.remaining = 3;
         user.save();
-        message.reply(`Next available revive ${user.revival.nextAvailable.toUTCString().substring(0,17)}`);
+        message.reply(
+          `Next available revive ${user.revival.nextAvailable
+            .toUTCString()
+            .substring(0, 17)}`
+        );
       }
     }
   }

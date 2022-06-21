@@ -1,10 +1,10 @@
-const { Client, Intents, ClientPresence } = require("discord.js");
+const { Client, Intents } = require("discord.js");
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
-  presence:{
-    status:"online",
-    activities:[{name:"!help to start your adventure",type:"PLAYING"}]
-  }
+  presence: {
+    status: "online",
+    activities: [{ name: "!help to start your adventure", type: "PLAYING" }],
+  },
 });
 require("dotenv").config();
 const mongoose = require("mongoose");
@@ -14,6 +14,7 @@ const { MessageHandler } = require("./utils/helpers/messageHandler");
 //init
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
+
   mongoose
     .connect(process.env.DB_URI)
     .then(() => {

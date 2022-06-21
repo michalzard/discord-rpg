@@ -102,45 +102,42 @@ module.exports.AdventureManager = class AdventureManager {
       filter,
       time: 1000 * 1000,
     });
-    const user = await Player.getById(message.author.id);//fetches user info once
+    const user = await Player.getById(message.author.id); //fetches user info once
     fightCollector.on("collect", (i) => {
       i.deferUpdate();
-
       if (i.customId == null) return;
       switch (i.customId) {
         case "fight":
-          if (randomEnemy.hp <= 5) {
-            randomEnemy.hp -= 5;
+          if (randomEnemy.hp <= 10) {
             fightCollector.stop("Entity Died");
             break;
           }
-          if (user.stats.hp <= 0) {
+          randomEnemy.hp -= 10;
+          randomEnemy.attack(i, 10);
+
+          if (user.stats.hp <= 10) {
             fightCollector.stop("Player Died");
             break;
           }
-          randomEnemy.hp -= 5;
-          randomEnemy.attack(i);
           //manually update health
           fightEmbed.fields[0].value = `${randomEnemy.hp}/${randomEnemy.hpMax}`;
           i.message.edit({
             embeds: [fightEmbed],
             components: [fightActions],
           });
+
           break;
       }
     });
 
     message
-      .reply({
-        embeds: [fightEmbed],
-        components: [fightActions],
-      })
+      .reply({ embeds: [fightEmbed], components: [fightActions] })
       .then(() => {
         //on entity kill
         fightCollector.on("end", async (i, reason) => {
-          const userById = await User.find({ id: i.last().user.id.toString() });
+          const userById = await User.find({id: i.last().user.id});
           const user = userById[0];
-          console.log(reason);
+
           // i is map of all collected interactions
           if (i.last().message) {
             if (user) {
@@ -150,30 +147,17 @@ module.exports.AdventureManager = class AdventureManager {
                   user.xp += randomEnemy.xp;
                   Player.levelUp(message, user.xp, user.id);
                   user.save();
-                  const missingXP = LevelManager.getMissingXP(
-                    user.xp,
-                    user.nextLevelXP
-                  );
+                  const missingXP = LevelManager.getMissingXP(user.xp,user.nextLevelXP);
 
                   i.last().message.edit({
-                    content: `**${
-                      randomEnemy.name
-                    } has been slain :skull:**\n**You received ${
-                      randomEnemy.coins
-                    } :coin: **\n**You received ${
-                      randomEnemy.xp
-                    } :hourglass:**\n${
-                      missingXP > 0
-                        ? `**${missingXP.toString()} :hourglass: remaining to next level**`
-                        : ""
-                    } `,
+                    content: `**${randomEnemy.name} has been slain :skull:**\n**You received ${randomEnemy.coins} :coin: **\n**You received ${randomEnemy.xp} :hourglass:**\n${missingXP > 0? `**${missingXP.toString()} :hourglass: remaining to next level**`  : ""} `,
                     embeds: [],
                     components: [],
                   });
                   break;
                 case "Player Died":
                   i.last().message.edit({
-                    content: `${user.displayName} just died.\n Type \`!user revive\` to revive your character.`,
+                    content: `${user.displayName} just died :skull:\nType \`!user revive\` to revive your character.`,
                     embeds: [],
                     components: [],
                   });
@@ -240,10 +224,7 @@ module.exports.AdventureManager = class AdventureManager {
           break;
         case "cancel":
           interaction.message.edit({
-            content: `<@${message.author.id}> escaped ${areaID.replace(
-              "_",
-              " "
-            )}`,
+            content: `<@${message.author.id}> escaped ${areaID.replace("_"," ")}`,
             embeds: [],
             components: [],
           });

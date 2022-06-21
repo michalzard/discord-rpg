@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "bot-dev": "nodemon index.js",
-    "create-command":"node ./utils/scripts/newCommandScript.js"
+    "create-command": "node ./utils/scripts/newCommandScript.js"
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,8 @@
   "dependencies": {
     "discord.js": "^13.7.0",
     "dotenv": "^16.0.1",
-    "mongoose": "^6.3.4"
+    "mongoose": "^6.3.4",
+    "mongoose-sequence": "^5.3.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.16"
