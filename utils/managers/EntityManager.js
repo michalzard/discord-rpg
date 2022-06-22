@@ -299,6 +299,13 @@ class PlayerEntity extends Entity {
       }
     }
   }
+
+  static async addToInventory(message,item){
+    const { id } = message.author;
+    const user = await this.getById(id);
+
+    user.addItem(item);
+  }
 }
 
 module.exports = {

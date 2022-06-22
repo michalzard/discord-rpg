@@ -22,12 +22,9 @@ const ItemSchema = new mongoose.Schema({
     type:String,
     enum:["common,rare,epic,legendary"],
     default:"common"
-  }
-
-
+  },
 });
 
 ItemSchema.plugin(AutoIncrement,{id:"item_seq",inc_field:"item_id"});
-
 
 module.exports = mongoose.model("Item", ItemSchema);

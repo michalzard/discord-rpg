@@ -3,6 +3,7 @@ const { Player } = require("../utils/managers/EntityManager");
 const Item = require("../schemas/item");
 const { Emoji } = require("../utils/helpers/emojiHandler");
 
+
 module.exports = {
   description: "available user commands",
   run: async(message, args) => {
@@ -23,15 +24,6 @@ module.exports = {
         break;
       case "delete":
         module.exports.remove(message);
-        break;
-      case "item":
-        const query= await Item.find({item_id:1});
-        const item = query[0];
-        const emojiList=Emoji.getEmojiByName(message);
-        console.log(emojiList);
-        const item1Embed=new MessageEmbed({title:item.name,description:`${item.quantity}/${item.quantityMax}`});
-        item1Embed.setAuthor({name:item.name,iconURL:Emoji.getEmojiURL(emojiList[0].id)});
-        message.reply({embeds:[item1Embed]});
         break;
       default:
         const embed = new MessageEmbed({
