@@ -69,28 +69,36 @@ userSchema.methods.addItem = function addItem(item) {
     for (let i = 0; i < this.inventory.length; i++) {
       const invItem = this.inventory[i];
       //if found the same item in add quantity
+      // if(item && invItem)
       if (item.item_id === invItem.item_id) {
-        console.log(`${invItem.quantity + item.quantity} quantity index ${i} compared to ${invItem.quantityMax} maximum`);
-       
         if (invItem.quantity + item.quantity <= invItem.quantityMax) {
-          console.log(`increment , index ${i} currently at ${invItem.quantity} quantity`);
           invItem.quantity += item.quantity;
-
         } else {
-          console.log(`Overflow at index ${i}`);
-          invItem.quantity=invItem.quantityMax;
-          item.quantity = (invItem.quantity + item.quantity) - invItem.quantityMax ;  
-          
-          console.log(`Adding item with quantity ${item.quantity} at index ${i+1},rem added ${(invItem.quantity + item.quantity) - invItem.quantityMax}`);
-          this.inventory[i + 1] = item;
-          continue;
+          invItem.quantity = invItem.quantityMax;
         }
       }
     }
   }
+
   //save inventory changes
   this.markModified("inventory");
-  this.save();
+  this.save((err, obj) => console.log(err, obj));
 };
 
 module.exports = mongoose.model("User", userSchema);
+
+// console.log(`${invItem.quantity + item.quantity} quantity index ${i} compared to ${invItem.quantityMax} maximum`);
+
+// if (invItem.quantity + item.quantity <= invItem.quantityMax) {
+//   console.log(`increment , index ${i} currently at ${invItem.quantity} quantity`);
+//   invItem.quantity += item.quantity;
+
+// } else {
+//   console.log(`Overflow at index ${i}`);
+//   invItem.quantity=invItem.quantityMax;
+//   item.quantity = (invItem.quantity + item.quantity) - invItem.quantityMax ;
+
+//   console.log(`Adding item with quantity ${item.quantity} at index ${i+1},rem added ${(invItem.quantity + item.quantity) - invItem.quantityMax}`);
+//   this.inventory[i + 1] = item;
+//   continue;
+// }
