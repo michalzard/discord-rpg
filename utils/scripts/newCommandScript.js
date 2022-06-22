@@ -11,8 +11,16 @@ const cmdFolderExists = fs.existsSync(cmdFolderPath);
 const fileContent = `
 module.exports = {
     description:"Default command desc",
-    run: function(message){
+    run: function(message,args){
     message.reply("Command created via script");
+
+    if (!args || !message) return;
+    //First argument is user obviously
+    //second argument which will be call for function
+    const secondArgument = args[1];
+    switch (secondArgument) {
+      //check for 2nd argument to specify logic
+    }
     }
   };
 `;
