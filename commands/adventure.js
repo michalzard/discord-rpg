@@ -7,7 +7,7 @@ const sameUserFilter = (buttonInt) => {
 
 module.exports = {
   description:"discover areas and fight enemies",
-  run: async (message) => {
+  run: async (message,args) => {
 
    const fUser = await User.find({id:message.author.id.toString()});
     const user = fUser[0];
@@ -49,3 +49,5 @@ module.exports = {
 
 };
 
+//Display number icon ,name of item and quantity
+// display another embed that shows what kind of command they can use to "activate that item" or sell it form inventory
