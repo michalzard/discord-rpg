@@ -2,6 +2,7 @@ const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const User = require("../../schemas/user");
 const { LevelManager } = require("./LevelManager");
 
+
 class Entity {
   constructor(name) {
     this.name = name || "Entity Name";
@@ -10,9 +11,10 @@ class Entity {
     this.coins = Math.floor(Math.random() * 50) + 5;
     this.xp = Math.floor(Math.random() * 50) + 5;
     this.items = [];
+    this.icon=""; // attachment://image.png
   }
   //deals 5 damage(debugging)
-  async attack(interaction, damage) {
+  async attackPlayer(interaction, damage) {
     //interaction.message => message from bot
     //interaction.user -> author
     const message = interaction.message;
@@ -29,9 +31,16 @@ class Entity {
     }
   }
 }
+
+const skeletonEntity=new Entity("Skeleton");
+const slimeEntity=new Entity("Slime");
+skeletonEntity.icon=`skeleton.png`;
+slimeEntity.icon=`slime.jpg`;
+
 class EntityManager {
   static Types = {
-    Skeleton: new Entity("Skeleton"),
+    Skeleton: skeletonEntity,
+    Slime: slimeEntity,
   };
 }
 
@@ -300,11 +309,39 @@ class PlayerEntity extends Entity {
     }
   }
 
-  static async addToInventory(message,item){
+  static async addToInventory(message, item) {
     const { id } = message.author;
     const user = await this.getById(id);
 
     user.addItem(item);
+  }
+
+  static async showInventory(message) {
+    const { id } = message.author;
+    const user = await this.getById(id);
+    if (user) {
+      const { displayName, inventory } = user;
+      let invDesc = "";
+      if (inventory.length === 0) {
+        invDesc = `_This inventory is empty_`;
+      } else {
+        for (let i = 0; i < inventory.length; i++) {
+          const item = inventory[i];
+          invDesc += `<:${item.icon.name}:${item.icon.id}> ${item.name} **x${item.quantity}** `;
+        }
+      }
+      const inventoryEmbed = new MessageEmbed({
+        title: `${displayName}'s Inventory`,
+        description: invDesc,
+        color:"GOLD"
+      });
+
+      message.reply({ embeds: [inventoryEmbed] });
+    } else {
+      message.reply(
+        `Your inventory is unavailable.\nUse \`!user info\` or \`!user create\` to check if you have created character`
+      );
+    }
   }
 }
 
