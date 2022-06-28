@@ -2,7 +2,6 @@ const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const User = require("../../schemas/user");
 const { LevelManager } = require("./LevelManager");
 
-
 class Entity {
   constructor(name) {
     this.name = name || "Entity Name";
@@ -11,7 +10,7 @@ class Entity {
     this.coins = Math.floor(Math.random() * 50) + 5;
     this.xp = Math.floor(Math.random() * 50) + 5;
     this.items = [];
-    this.icon=""; // attachment://image.png
+    this.icon = ""; // attachment://image.png
   }
   //deals 5 damage(debugging)
   async attackPlayer(interaction, damage) {
@@ -22,20 +21,17 @@ class Entity {
 
     if (user) {
       user.stats.hp -= damage;
-      user.save();
-      message.edit(
-        `**CombatLog**:${user.displayName} recieved 5 damage,currentHp:${user.stats.hp}`
-      );
+      await user.save();
     } else {
       message.reply(`Unable to attack player`);
     }
   }
 }
 
-const skeletonEntity=new Entity("Skeleton");
-const slimeEntity=new Entity("Slime");
-skeletonEntity.icon=`skeleton.png`;
-slimeEntity.icon=`slime.jpg`;
+const skeletonEntity = new Entity("Skeleton");
+const slimeEntity = new Entity("Slime");
+skeletonEntity.icon = `skeleton.png`;
+slimeEntity.icon = `slime.jpg`;
 
 class EntityManager {
   static Types = {
@@ -75,13 +71,12 @@ class PlayerEntity extends Entity {
 
         if (remainder > 0) {
           user.xp = remainder;
-          user.save();
           console.log(`user xp with remainder added ${user.xp},r ${remainder}`);
         }
         user.save();
         const newLvlEmbed = new MessageEmbed({
-          title: `${user.displayName} leveled up `,
-          description: `Congratulations,Your new level is ${user.level}\n1 **Talent point** has been added `,
+          title: `${user.displayName} leveled up :tada: `,
+          description: `**Congratulations**\nYour new level is ${user.level}\n**1 Talent point** has been added `,
         });
         message.reply({ embeds: [newLvlEmbed] });
       }
@@ -216,7 +211,7 @@ class PlayerEntity extends Entity {
         },
         {
           name: "Currencies",
-          value: `:coin: ${user.coins}\n`,
+          value: `:coin: ${user.currency.coins.toString()}\n`,
           inline: true,
         },
         {
@@ -333,7 +328,7 @@ class PlayerEntity extends Entity {
       const inventoryEmbed = new MessageEmbed({
         title: `${displayName}'s Inventory`,
         description: invDesc,
-        color:"GOLD"
+        color: "GOLD",
       });
 
       message.reply({ embeds: [inventoryEmbed] });
