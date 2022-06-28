@@ -1,4 +1,4 @@
-const {MessageActionRow,MessageButton,MessageEmbed} = require("discord.js");
+const { MessageActionRow, MessageButton, MessageEmbed } = require("discord.js");
 const User = require("../../schemas/user");
 const { Entity, Player } = require("./EntityManager");
 const { LevelManager } = require("./LevelManager");
@@ -12,14 +12,14 @@ module.exports.AdventureManager = class AdventureManager {
       monsters: [Entity.Types.Skeleton, Entity.Types.Slime],
     },
     {
-     name: "Graveyard",
-     minReqLevel: 15,
-     monsters:[],
+      name: "Graveyard",
+      minReqLevel: 15,
+      monsters: [],
     },
     {
-    name: "Ancient Temple",
-    minReqLevel: 25,
-    monsters:[],
+      name: "Ancient Temple",
+      minReqLevel: 25,
+      monsters: [],
     },
   ];
 
@@ -71,8 +71,8 @@ module.exports.AdventureManager = class AdventureManager {
     for (let i = 0; i < this.areas.length; i++) {
       const area = this.areas[i];
       if (area.name == areaName) {
-        for (let j = 0; j < area.monsters.length; j++)
-          randomEnemy = area.monsters[j];
+        randomEnemy = area.monsters[1];//random
+        
       }
       randomEnemy.hp = randomEnemy.hpMax; //make sure hp is reset
     }
@@ -82,10 +82,11 @@ module.exports.AdventureManager = class AdventureManager {
      */
     const fightEmbed = new MessageEmbed({
       title: `A wild ${randomEnemy.name} has appeared`,
-      description: `HP:${randomEnemy.hp}/${randomEnemy.hpMax}`,
+      description: `**HP** : ${randomEnemy.hp}/${randomEnemy.hpMax}`,
       image: {
         url: `attachment://${randomEnemy.icon}`,
       },
+      color: "BLURPLE",
     });
     //create attachment so we can display custom image into embed
     // const fightEmbedImage = new MessageAttachment(`${process.cwd() + randomEnemy.iconPath}`);
@@ -105,44 +106,56 @@ module.exports.AdventureManager = class AdventureManager {
       filter,
       time: 1000 * 1000,
     });
+    let isInvOpen = false; 
 
-    const user = await Player.getById(message.author.id); //fetches user info once
-    fightCollector.on("collect", (i) => {
+    fightCollector.on("collect", async (i) => {
       i.deferUpdate();
-      if (i.customId == null) return;
+      const user = await Player.getById(message.author.id); //fetches user info once
+
+      if (!i.customId) return;
+      console.log(i.customId);
       switch (i.customId) {
+        
         case "fight":
-          if (randomEnemy.hp <= 10) {
+          const attackPwr = 5;
+          if (randomEnemy.hp <= attackPwr) {
             fightCollector.stop("Entity Died");
             break;
           }
           //TODO: when clicking fight button
           // open actions with class specific attacks
-          randomEnemy.hp -= 10;
-          randomEnemy.attackPlayer(i, 10);
+          randomEnemy.hp -= attackPwr;
+          randomEnemy.attackPlayer(i, 1);
+          const combatLogEmbed = new MessageEmbed({
+            title: "Last Combat Log",
+            description: `**${randomEnemy.name}** got hit by ${attackPwr}.\n <@${user.id}> got hit by 1, ${user.stats.hp} left.`,
+            color: "BLUE",
+          });
 
-          if (user.stats.hp <= 10) {
+          if (user.stats.hp <= attackPwr) {
             fightCollector.stop("Player Died");
             break;
           }
           //update health
-          fightEmbed.description = `${randomEnemy.hp}/${randomEnemy.hpMax}`;
+          fightEmbed.description = `**HP** : ${randomEnemy.hp}/${randomEnemy.hpMax}`;
           i.message.edit({
-            embeds: [fightEmbed],
+            embeds: [fightEmbed, combatLogEmbed],
             components: [fightActions],
-            files: [
-              {
-                name: `${randomEnemy.icon}`,
-                attachment: `${process.cwd()}/assets/${randomEnemy.icon}`,
-              },
-            ],
           });
-
+         
+          break;
+          case "inventory": 
+          if(!isInvOpen){
+            isInvOpen=true; // TODO : handles opening and closing inventory
+            Player.showInventory(message);
+          }
+          
           break;
       }
     });
 
-    message.reply({
+    message
+      .reply({
         embeds: [fightEmbed],
         components: [fightActions],
         files: [
@@ -167,14 +180,19 @@ module.exports.AdventureManager = class AdventureManager {
                   user.xp += randomEnemy.xp;
                   Player.levelUp(message, user.xp, user.id);
                   user.save();
-                  const missingXP = LevelManager.getMissingXP(user.xp,user.nextLevelXP);
-
+                  const missingXP = LevelManager.getMissingXP(
+                    user.xp,
+                    user.nextLevelXP
+                  );
+                  const rewardEmbed= new MessageEmbed({
+                    title:`:skull: ${randomEnemy.name} has been slain`,
+                    description:`**${user.displayName}'s Rewards**\n :coin: **${randomEnemy.coins}**\n :hourglass: **${randomEnemy.xp}**\n${missingXP > 0? `**${missingXP.toString()}** xp *remaining to next level (${user.level+1})*`: ""}`,
+                    color:"GOLD",
+                  })
                   i.last().message.edit({
-                    content: `**${randomEnemy.name} has been slain :skull:**\n**You received ${randomEnemy.coins} :coin: **\n**You received ${randomEnemy.xp} :hourglass:**\n${
-                    missingXP > 0? `**${missingXP.toString()} :hourglass: remaining to next level**`: ""} `,
-                    embeds: [],
+                    embeds: [rewardEmbed],
                     components: [],
-                    files:[],
+                    files: [],
                   });
                   break;
                 case "Player Died":
@@ -182,7 +200,7 @@ module.exports.AdventureManager = class AdventureManager {
                     content: `${user.displayName} just died :skull:\nType \`!user revive\` to revive your character.`,
                     embeds: [],
                     components: [],
-                    files:[],
+                    files: [],
                   });
                   break;
                 case "time":
@@ -191,7 +209,7 @@ module.exports.AdventureManager = class AdventureManager {
                     content: "Enemy ran away!",
                     embeds: [],
                     components: [],
-                    files:[],
+                    files: [],
                   });
 
                   break;
