@@ -11,6 +11,7 @@ class Entity {
     this.xp = Math.floor(Math.random() * 50) + 5;
     this.items = [];
     this.icon = ""; // attachment://image.png
+    this.damage = 1;
   }
   //deals 5 damage(debugging)
   async attackPlayer(interaction, damage) {
@@ -307,8 +308,7 @@ class PlayerEntity extends Entity {
   static async addToInventory(message, item) {
     const { id } = message.author;
     const user = await this.getById(id);
-
-    user.addItem(item);
+    if (item) user.addItem(item);
   }
 
   static async showInventory(message) {
@@ -336,6 +336,87 @@ class PlayerEntity extends Entity {
       message.reply(
         `Your inventory is unavailable.\nUse \`!user info\` or \`!user create\` to check if you have created character`
       );
+    }
+  }
+
+  static async interactWithEnemy(
+    interaction,
+    enemyEntity,
+    embeds = [],
+    components = [],
+    collectors = []
+  ) {
+    const { id } = interaction.message.mentions.repliedUser;
+    const user = await this.getById(id);
+    if (user) {
+      const { abilities } = user;
+      /**
+       * [
+       * { class: 'All', name: 'Attack', damage: 10 }
+       * ]
+       */
+      const skills = new MessageActionRow();
+
+      for (let i = 0; i < abilities.length; i++) {
+        const a = abilities[i];
+        skills.addComponents(
+          new MessageButton()
+            .setCustomId(a.name)
+            .setLabel(`${a.icon} ${a.name} (${a.damage})`)
+            .setStyle("DANGER")
+        );
+      }
+      skills.addComponents(
+        new MessageButton()
+          .setCustomId("Back")
+          .setLabel("Go back")
+          .setStyle("SECONDARY")
+      );
+
+      const filter = (buttonInt) => {
+        return id === buttonInt.user.id;
+      };
+
+      const skillCollector =
+        interaction.message.channel.createMessageComponentCollector({
+          filter,
+          time: 1000 * 1000,
+        });
+      skillCollector.on("collect", (i) => {
+        if (!i.customId) return;
+        if (i.customId === "Back") {
+          /* return to main menu*/
+          console.log("Go back logic");
+          interaction.message.edit({ components: [components[0]] });
+          return;
+        }
+
+        if (user.stats.hp <= enemyEntity.damage) {
+          collectors[0].stop("Player Died");
+          return;
+        }
+
+        for (let j = 0; j < abilities.length; j++) {
+          const skill = abilities[j];
+          if (skill.name === i.customId) {
+            enemyEntity.hp -= skill.damage;
+            //manually update entity embed
+            embeds[0].description = `**HP** : ${enemyEntity.hp}/${enemyEntity.hpMax}`;
+            console.log(enemyEntity.hp, skill.damage, embeds[0].description);
+            if (enemyEntity.hp <= skill.damage) {
+              collectors[0].stop("Entity Died");
+              return;
+            }
+            interaction.message.edit({
+              embeds,
+              components: [skills],
+            });
+            return;
+          }
+        }
+      });
+
+      interaction.message.edit({ components: [skills] });
     }
   }
 }
