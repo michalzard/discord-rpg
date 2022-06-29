@@ -2,7 +2,7 @@ const { Client, Intents } = require("discord.js");
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
   presence: {
-    status: "online",
+    status: "dnd",
     activities: [{ name: "!help to start your adventure", type: "PLAYING" }],
   },
 });
@@ -21,7 +21,7 @@ client.on("ready", () => {
       console.log("Logged in a database");
     })
     .catch((e) => {
-      console.log(e);
+      console.log(e.message);
     });
 });
 
