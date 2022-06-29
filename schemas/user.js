@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
       enum: ["Warrior", "Mage", "Rogue"],
       default: "Warrior",
     },
+    abilities: [],
     level: {
       type: Number,
       default: 1,
@@ -85,20 +86,61 @@ userSchema.methods.addItem = function addItem(item) {
   this.save((err, obj) => console.log(err, obj));
 };
 
+/**
+ * {
+    name: { type: String, default: "Attack" },
+    damage: { type: Number, default: 10 },
+   },
+ */
+
+const Abilities = [
+  {
+    class: "Warrior",
+    name: "Heroic Strike",
+    icon: ":man_superhero:",
+    damage: 10,
+  },
+  {
+    class: "Mage",
+    name: "Fireball",
+    icon: ":fire:",
+    damage: 15,
+  },
+  {
+    class: "Mage",
+    name: "Frostbolt",
+    icon: ":fireworks:",
+    damage: 10,
+  },
+  {
+    class: "Rogue",
+    name: "Backstab",
+    icon: "🗡️",
+    damage: 11,
+  },
+  {
+    class: "Rogue",
+    name: "Slash",
+    icon: "🗡️",
+    damage: 8, //todo:bleed
+  },
+];
+
+userSchema.pre("save", function () {
+  const classAbilities = Abilities.filter(
+    (ability) => ability.class === this.class || ability.class === "All"
+  );
+
+  this.abilities = [];
+  this.abilities.push(
+    {
+      class: "All",
+      name: "Attack",
+      icon: "⚔️",
+      damage: 10,
+    },
+    ...classAbilities
+  );
+});
+
 module.exports = mongoose.model("User", userSchema);
-
-// console.log(`${invItem.quantity + item.quantity} quantity index ${i} compared to ${invItem.quantityMax} maximum`);
-
-// if (invItem.quantity + item.quantity <= invItem.quantityMax) {
-//   console.log(`increment , index ${i} currently at ${invItem.quantity} quantity`);
-//   invItem.quantity += item.quantity;
-
-// } else {
-//   console.log(`Overflow at index ${i}`);
-//   invItem.quantity=invItem.quantityMax;
-//   item.quantity = (invItem.quantity + item.quantity) - invItem.quantityMax ;
-
-//   console.log(`Adding item with quantity ${item.quantity} at index ${i+1},rem added ${(invItem.quantity + item.quantity) - invItem.quantityMax}`);
-//   this.inventory[i + 1] = item;
-//   continue;
-// }
