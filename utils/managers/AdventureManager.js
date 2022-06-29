@@ -71,8 +71,7 @@ module.exports.AdventureManager = class AdventureManager {
     for (let i = 0; i < this.areas.length; i++) {
       const area = this.areas[i];
       if (area.name == areaName) {
-        randomEnemy = area.monsters[1];//random
-        
+        randomEnemy = area.monsters[1]; //random
       }
       randomEnemy.hp = randomEnemy.hpMax; //make sure hp is reset
     }
@@ -106,50 +105,47 @@ module.exports.AdventureManager = class AdventureManager {
       filter,
       time: 1000 * 1000,
     });
-    let isInvOpen = false; 
+    let isInvOpen = false;
 
     fightCollector.on("collect", async (i) => {
       i.deferUpdate();
       const user = await Player.getById(message.author.id); //fetches user info once
 
       if (!i.customId) return;
-      console.log(i.customId);
       switch (i.customId) {
-        
         case "fight":
-          const attackPwr = 5;
-          if (randomEnemy.hp <= attackPwr) {
-            fightCollector.stop("Entity Died");
-            break;
-          }
+        //display available spells for user
           //TODO: when clicking fight button
           // open actions with class specific attacks
-          randomEnemy.hp -= attackPwr;
+          // randomEnemy.hp -= attackPwr;
           randomEnemy.attackPlayer(i, 1);
+
           const combatLogEmbed = new MessageEmbed({
             title: "Last Combat Log",
-            description: `**${randomEnemy.name}** got hit by ${attackPwr}.\n <@${user.id}> got hit by 1, ${user.stats.hp} left.`,
+            description: `**${randomEnemy.name}** got hit by X.\n <@${user.id}> got hit by 1.  ${user.stats.hp} left.`,
             color: "BLUE",
           });
 
-          if (user.stats.hp <= attackPwr) {
-            fightCollector.stop("Player Died");
-            break;
-          }
+          
           //update health
-          fightEmbed.description = `**HP** : ${randomEnemy.hp}/${randomEnemy.hpMax}`;
-          i.message.edit({
-            embeds: [fightEmbed, combatLogEmbed],
-            components: [fightActions],
-          });
-         
+          // fightEmbed.description = `**HP** : ${randomEnemy.hp}/${randomEnemy.hpMax}`;
+          Player.interactWithEnemy(i,randomEnemy,[fightEmbed,combatLogEmbed],[fightActions],[fightCollector]);
+
+          // i.message.edit({
+          //   embeds: [fightEmbed, combatLogEmbed],
+          //   components: [fightActions],
+          // });
+
           break;
-          case "inventory": 
-          if(!isInvOpen){
-            isInvOpen=true; // TODO : handles opening and closing inventory
+        case "inventory":
+          if (!isInvOpen) {
+            isInvOpen = true; // TODO : handles opening and closing inventory
             Player.showInventory(message);
           }
-          
+
+          break;
+          case "time":
+            message.delete(); 
           break;
       }
     });
@@ -179,16 +175,25 @@ module.exports.AdventureManager = class AdventureManager {
                   user.coins += randomEnemy.coins;
                   user.xp += randomEnemy.xp;
                   Player.levelUp(message, user.xp, user.id);
-                  user.save();
                   const missingXP = LevelManager.getMissingXP(
                     user.xp,
                     user.nextLevelXP
                   );
-                  const rewardEmbed= new MessageEmbed({
-                    title:`:skull: ${randomEnemy.name} has been slain`,
-                    description:`**${user.displayName}'s Rewards**\n :coin: **${randomEnemy.coins}**\n :hourglass: **${randomEnemy.xp}**\n${missingXP > 0? `**${missingXP.toString()}** xp *remaining to next level (${user.level+1})*`: ""}`,
-                    color:"GOLD",
-                  })
+                  const rewardEmbed = new MessageEmbed({
+                    title: `:skull: ${randomEnemy.name} has been slain`,
+                    description: `**${
+                      user.displayName
+                    }'s Rewards**\n :coin: **${
+                      randomEnemy.coins
+                    }**  :hourglass: **${randomEnemy.xp}**\n${
+                      missingXP > 0
+                        ? `**${missingXP.toString()}** xp *remaining to next level (${
+                            user.level + 1
+                          })*\n`
+                        : ""
+                    }`,
+                    color: "GOLD",
+                  });
                   i.last().message.edit({
                     embeds: [rewardEmbed],
                     components: [],
